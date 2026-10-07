@@ -78,7 +78,10 @@
       "allOf": [
         {
           "if": {"properties": {"resource_type": {"const": "notebook"}}, "required": ["resource_type"]},
-          "then": {"required": ["notebook_id", "project_id", "creator_id", "owner_id"]}
+          "then": {
+            "required": ["notebook_id", "project_id", "creator_id", "owner_id"],
+            "properties": {"owner_id": {"$ref": "#/$defs/id"}}
+          }
         }
       ]
     },

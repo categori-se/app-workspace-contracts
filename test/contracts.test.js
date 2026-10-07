@@ -18,6 +18,7 @@ import {
   collaborationPrincipalTypes,
   collaborationResourceTypes,
   collaborationRoles,
+  assertCollaborationResource,
   assertDemoPolicy,
   createArtifactReference,
   createDataRepository,
@@ -35,6 +36,7 @@ import {
   sourceAdapterCapabilities,
   sourceCaptureModes,
   validateResourceGrant,
+  validateCollaborationResource,
   validateMassgisSourceManifest,
   validatePublicReleaseCandidate,
   validatePublicReleaseTransition,
@@ -97,6 +99,38 @@ test("a notebook creator is owner and cannot be denied by an ordinary grant", ()
   });
   assert.equal(access.owner, true);
   assert.deepEqual(access.allowed_actions, ["view", "comment", "review", "edit", "execute", "manage_access", "delete"]);
+});
+
+test("unknown notebook authorship is retained while an explicit owner controls access", () => {
+  const resource = createNotebookResource({notebookId: "notebook_imported", workspaceId: "workspace_imported",
+    projectId: "project_imported", creatorId: null, ownerId: "user_owner", now});
+  assert.equal(resource.creator_id, null);
+  assert.equal(resource.owner_id, "user_owner");
+  assert.deepEqual(validateCollaborationResource(resource), []);
+  assert.equal(resolveResourceAccess({principal: {type: "user", id: "user_owner"}, resource, now}).owner, true);
+  assert.deepEqual(resolveResourceAccess({principal: {type: "user", id: "user_other"}, resource, now}).allowed_actions, []);
+  assert.equal(assertCollaborationResource({...resource, creator_id: undefined}).creator_id, null);
+});
+
+test("notebook ownership transfer preserves known authorship without granting the creator access", () => {
+  const resource = createNotebookResource({notebookId: "notebook_transferred", workspaceId: "workspace_imported",
+    projectId: "project_imported", creatorId: "user_creator", ownerId: "user_owner", now});
+  assert.equal(resource.creator_id, "user_creator");
+  assert.deepEqual(resolveResourceAccess({principal: {type: "user", id: "user_creator"}, resource, now}).allowed_actions, []);
+  assert.equal(resolveResourceAccess({principal: {type: "user", id: "user_owner"}, resource, now}).owner, true);
+});
+
+test("unknown authorship cannot replace required notebook ownership or conceal invalid identifiers", () => {
+  const resource = {...notebook, creator_id: null, owner_id: "user_owner"};
+  for (const creator_id of [false, 0, "", "bad creator"]) {
+    assert.throws(() => assertCollaborationResource({...resource, creator_id}), /creator_id/);
+  }
+  for (const owner_id of [null, undefined, false, 0, "", "bad owner"]) {
+    assert.throws(() => assertCollaborationResource({...resource, owner_id}), /owner_id/);
+  }
+  const schema = JSON.parse(readFileSync(new URL("../schemas/workspace-contracts.schema.json", import.meta.url)));
+  assert.equal(schema.$defs.collaborationResource.properties.creator_id.$ref, "#/$defs/nullableId");
+  assert.equal(schema.$defs.collaborationResource.allOf[0].then.properties.owner_id.$ref, "#/$defs/id");
 });
 
 test("restricted notebooks do not inherit project access", () => {

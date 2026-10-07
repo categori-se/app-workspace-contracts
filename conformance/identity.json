@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "@categori/workspace-contracts",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.9",
   "evaluation_time": "2026-10-05T12:00:00Z",
   "cases": [
     {
@@ -11699,6 +11699,121 @@
         "revision": 1
       },
       "expected": []
+    },
+    {
+      "name": "notebook unknown creator with explicit owner",
+      "operation": "validate_collaboration_resource",
+      "input": {
+        "schema_version": 1,
+        "resource_type": "notebook",
+        "resource_id": "notebook_imported",
+        "notebook_id": "notebook_imported",
+        "workspace_id": "workspace_imported",
+        "project_id": "project_imported",
+        "creator_id": null,
+        "owner_id": "user_owner",
+        "access_policy": {
+          "inheritance": "restricted",
+          "allow_public_links": false
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "notebook invalid false creator is not unknown",
+      "operation": "validate_collaboration_resource",
+      "input": {
+        "schema_version": 1,
+        "resource_type": "notebook",
+        "resource_id": "notebook_imported",
+        "notebook_id": "notebook_imported",
+        "workspace_id": "workspace_imported",
+        "project_id": "project_imported",
+        "creator_id": false,
+        "owner_id": "user_owner",
+        "access_policy": {
+          "inheritance": "restricted",
+          "allow_public_links": false
+        }
+      },
+      "expected": [
+        {
+          "path": "$.creator_id",
+          "message": "must be a non-empty opaque identifier"
+        }
+      ]
+    },
+    {
+      "name": "notebook invalid zero creator is not unknown",
+      "operation": "validate_collaboration_resource",
+      "input": {
+        "schema_version": 1,
+        "resource_type": "notebook",
+        "resource_id": "notebook_imported",
+        "notebook_id": "notebook_imported",
+        "workspace_id": "workspace_imported",
+        "project_id": "project_imported",
+        "creator_id": 0,
+        "owner_id": "user_owner",
+        "access_policy": {
+          "inheritance": "restricted",
+          "allow_public_links": false
+        }
+      },
+      "expected": [
+        {
+          "path": "$.creator_id",
+          "message": "must be a non-empty opaque identifier"
+        }
+      ]
+    },
+    {
+      "name": "notebook invalid empty creator is not unknown",
+      "operation": "validate_collaboration_resource",
+      "input": {
+        "schema_version": 1,
+        "resource_type": "notebook",
+        "resource_id": "notebook_imported",
+        "notebook_id": "notebook_imported",
+        "workspace_id": "workspace_imported",
+        "project_id": "project_imported",
+        "creator_id": "",
+        "owner_id": "user_owner",
+        "access_policy": {
+          "inheritance": "restricted",
+          "allow_public_links": false
+        }
+      },
+      "expected": [
+        {
+          "path": "$.creator_id",
+          "message": "must be a non-empty opaque identifier"
+        }
+      ]
+    },
+    {
+      "name": "notebook unknown creator without owner is rejected",
+      "operation": "validate_collaboration_resource",
+      "input": {
+        "schema_version": 1,
+        "resource_type": "notebook",
+        "resource_id": "notebook_imported",
+        "notebook_id": "notebook_imported",
+        "workspace_id": "workspace_imported",
+        "project_id": "project_imported",
+        "creator_id": null,
+        "owner_id": null,
+        "access_policy": {
+          "inheritance": "restricted",
+          "allow_public_links": false
+        }
+      },
+      "expected": [
+        {
+          "path": "$.owner_id",
+          "message": "notebook resources require owner_id"
+        }
+      ]
     }
   ]
 }
