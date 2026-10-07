@@ -172,13 +172,12 @@ export function validateCollaborationResource(resource) {
   if (value.project_id) validateIdentifier(value.project_id, "$.project_id", errors);
   if (value.client_id) validateIdentifier(value.client_id, "$.client_id", errors);
   if (value.team_id) validateIdentifier(value.team_id, "$.team_id", errors);
-  if (value.creator_id) validateIdentifier(value.creator_id, "$.creator_id", errors);
-  if (value.owner_id) validateIdentifier(value.owner_id, "$.owner_id", errors);
+  if (value.creator_id !== null) validateIdentifier(value.creator_id, "$.creator_id", errors);
+  if (value.owner_id !== null) validateIdentifier(value.owner_id, "$.owner_id", errors);
   if (!inheritanceModeSet.has(value.access_policy.inheritance)) errors.push(issue("$.access_policy.inheritance", "inheritance must be inherit or restricted"));
   if (typeof value.access_policy.allow_public_links !== "boolean") errors.push(issue("$.access_policy.allow_public_links", "allow_public_links must be boolean"));
   if (value.resource_type === collaborationResourceTypes.notebook) {
     if (!value.project_id) errors.push(issue("$.project_id", "notebook resources require project_id"));
-    if (!value.creator_id) errors.push(issue("$.creator_id", "notebook resources require creator_id"));
     if (!value.owner_id) errors.push(issue("$.owner_id", "notebook resources require owner_id"));
   }
   return errors;
@@ -450,8 +449,8 @@ function canonicalResource(resource = {}) {
     project_id: read(resource, "project_id", "projectId") || null,
     client_id: read(resource, "client_id", "clientId") || null,
     team_id: read(resource, "team_id", "teamId") || null,
-    creator_id: read(resource, "creator_id", "creatorId", "created_by", "createdBy") || null,
-    owner_id: read(resource, "owner_id", "ownerId", "owner_user_id", "ownerUserId") || read(resource, "creator_id", "creatorId", "created_by", "createdBy") || null,
+    creator_id: read(resource, "creator_id", "creatorId", "created_by", "createdBy") ?? null,
+    owner_id: read(resource, "owner_id", "ownerId", "owner_user_id", "ownerUserId") ?? read(resource, "creator_id", "creatorId", "created_by", "createdBy") ?? null,
     access_policy: {
       inheritance: read(accessPolicy, "inheritance") || collaborationInheritanceModes.restricted,
       allow_public_links: read(accessPolicy, "allow_public_links", "allowPublicLinks") === true

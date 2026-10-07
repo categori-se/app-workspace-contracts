@@ -405,9 +405,11 @@ def _canonical_resource(resource):
         "resource_id":_or(_or(_read(resource, "resource_id", "resourceId"), _read(resource, f"{kind}_id", f"{camel}Id", "id")), ""),
         "workspace_id":_or(_read(resource, "workspace_id", "workspaceId", "tenant_id", "tenantId"), ""),
         "access_policy":{"inheritance":_or(_read(policy, "inheritance"), "restricted"), "allow_public_links":_read(policy, "allow_public_links", "allowPublicLinks") is True}})
-    for field, aliases in {"project_id":("project_id","projectId"), "client_id":("client_id","clientId"), "team_id":("team_id","teamId"), "creator_id":("creator_id","creatorId","created_by","createdBy")}.items():
+    for field, aliases in {"project_id":("project_id","projectId"), "client_id":("client_id","clientId"), "team_id":("team_id","teamId")}.items():
         result[field] = _or(_read(resource,*aliases),None)
-    result["owner_id"] = _or(_or(_read(resource,"owner_id","ownerId","owner_user_id","ownerUserId"), _read(resource,"creator_id","creatorId","created_by","createdBy")),None)
+    result["creator_id"] = _read(resource,"creator_id","creatorId","created_by","createdBy")
+    owner = _read(resource,"owner_id","ownerId","owner_user_id","ownerUserId")
+    result["owner_id"] = result["creator_id"] if owner is None else owner
     return result
 
 
@@ -444,13 +446,16 @@ def validate_collaboration_resource(resource):
         errors.append(_issue("$.resource_type","resource_type is not supported"))
     for key in ("resource_id","workspace_id"):
         _collaboration_id(value[key],f"$.{key}",errors)
-    for key in ("project_id","client_id","team_id","creator_id","owner_id"):
+    for key in ("project_id","client_id","team_id"):
         if _truth(value[key]):
+            _collaboration_id(value[key],f"$.{key}",errors)
+    for key in ("creator_id","owner_id"):
+        if value[key] is not None:
             _collaboration_id(value[key],f"$.{key}",errors)
     if value["access_policy"]["inheritance"] not in ("inherit","restricted"):
         errors.append(_issue("$.access_policy.inheritance","inheritance must be inherit or restricted"))
     if value["resource_type"] == "notebook":
-        for key in ("project_id","creator_id","owner_id"):
+        for key in ("project_id","owner_id"):
             if not _truth(value[key]):
                 errors.append(_issue(f"$.{key}",f"notebook resources require {key}"))
     return errors

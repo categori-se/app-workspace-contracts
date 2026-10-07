@@ -87,7 +87,7 @@ export {
   validateResourceReference
 } from "./interoperability.js";
 
-export const workspaceContractsVersion = "0.1.0-alpha.8";
+export const workspaceContractsVersion = "0.1.0-alpha.9";
 
 export {assertPreservedRecord, validatePreservedRecord} from "./preservation.js";
 
