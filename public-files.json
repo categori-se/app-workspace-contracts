@@ -28,6 +28,7 @@
   "src/publication.js",
   "src/releases.js",
   "src/repository.js",
+  "src/resource-pools.js",
   "src/retained.js",
   "src/source-manifest.js",
   "src/working-state.js",
@@ -43,6 +44,7 @@
   "test/preservation.test.js",
   "test/releases-fixtures.json",
   "test/releases.test.js",
+  "test/resource-pools.test.js",
   "test/retained.test.js",
   "test/working-state.test.js"
 ]
